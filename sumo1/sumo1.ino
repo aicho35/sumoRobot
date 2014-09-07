@@ -1,93 +1,64 @@
+#include <QTRSensors.h>
+#include <ZumoReflectanceSensorArray.h>
 #include <ZumoMotors.h>
+#include <ZumoBuzzer.h>
+#include <Pushbutton.h>
 
-/*
- * This example uses the ZumoMotors library to drive each motor on the Zumo
- * forward, then backward. The yellow user LED is on when a motor should be
- * running forward and off when a motor should be running backward. If a
- * motor on your Zumo has been flipped, you can correct its direction by
- * uncommenting the call to flipLeftMotor() or flipRightMotor() in the setup()
- * function.
- */
+// calibaration phase 1 
 
 #define LED_PIN 13
-#define LED_PIN 12
+#define NUM_SENSORS 6
 
+ZumoReflectanceSensorArray reflectanceSensors;
 ZumoMotors motors;
+ZumoBuzzer buzzer;
 
-void setup()
-{
-  pinMode(LED_PIN, OUTPUT);
+//proto-types
+//boolean moveForward();
+
+unsigned int sensorValues[NUM_SENSORS];
+
+void setup(){
+  reflectanceSensors.init();
+  pinMode(LED_PIN,OUTPUT);
+  motors.flipLeftMotor(true);
   
-  // uncomment one or both of the following lines if your motors' directions need to be flipped
-  //motors.flipLeftMotor(true);
+  
+  digitalWrite(LED_PIN,HIGH);
+  unsigned long startTime = millis();
+  while(millis() - startTime < 10000)   // make the calibration take 10 seconds
+  {
+    reflectanceSensors.calibrate();
+  }
+  digitalWrite(LED_PIN,LOW);
+  Serial.begin(9600);
+  
   //motors.flipRightMotor(true);
+  
 }
 
-void loop()
-{
-  // run left motor forward
-  
-  digitalWrite(LED_PIN, HIGH);
-  
-  for (int speed = 0; speed <= 400; speed++)
-  {
-    motors.setLeftSpeed(speed);
-    delay(2);
+void loop(){
+  //go forward 
+  //digitalWrite(LED_PIN,HIGH);
+  digitalWrite(LED_PIN,LOW);
+  for(byte i = 0;i<NUM_SENSORS;i++){
+    if(sensorValues[i] >= 900){
+      digitalWrite(LED_PIN,HIGH);
+      motors.setSpeeds(400,400);
+    }
+    else{
+      unsigned long time = millis();
+      while(millis() - time < 100){
+        //motors.setSpeeds(400,400);
+        //delay(5);
+        //motors.setSpeeds(-200,-200);
+        //delay(5);
+        motors.setSpeeds(200,-200);//on spot turn 
+      }
+    }
   }
-
-  for (int speed = 400; speed >= 0; speed--)
-  {
-    motors.setLeftSpeed(speed);
-    delay(2);
-  }
-  
-  // run left motor backward
-  
-  digitalWrite(LED_PIN, LOW);
-  
-  for (int speed = 0; speed >= -400; speed--)
-  {
-    motors.setLeftSpeed(speed);
-    delay(2);
-  }
-  
-  for (int speed = -400; speed <= 0; speed++)
-  {
-    motors.setLeftSpeed(speed);
-    delay(2);
-  }
-
-  // run right motor forward
-  
-  digitalWrite(LED_PIN, HIGH);
-  
-  for (int speed = 0; speed <= 400; speed++)
-  {
-    motors.setRightSpeed(speed);
-    delay(2);
-  }
-
-  for (int speed = 400; speed >= 0; speed--)
-  {
-    motors.setRightSpeed(speed);
-    delay(2);
-  }
-  
-  // run right motor backward
-  
-  digitalWrite(LED_PIN, LOW);
-  
-  for (int speed = 0; speed >= -400; speed--)
-  {
-    motors.setRightSpeed(speed);
-    delay(2);
-  }
-  
-  for (int speed = -400; speed <= 0; speed++)
-  {
-    motors.setRightSpeed(speed);
-    delay(2);
-  }
-  
-  delay(500);
 }
+
+//sumo move forward
+//sumo move backward
+//sumo turn right
